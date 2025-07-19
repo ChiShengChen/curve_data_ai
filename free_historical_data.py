@@ -13,6 +13,78 @@ from typing import Dict, List, Optional
 import json
 from pathlib import Path
 
+# ========================================
+# 🔧 配置参数 - 在这里修改天数设置
+# ========================================
+DEFAULT_HISTORICAL_DAYS = 365  # 默认获取1年历史数据
+MAX_THEGRAPH_DAYS = 365       # The Graph API最大支持天数
+DEFAULT_SELF_BUILT_DAYS = 365 # 自建数据库默认天数
+
+# 快速配置选项
+QUICK_TEST_DAYS = 7           # 快速测试用(7天)
+MEDIUM_RANGE_DAYS = 90        # 中期分析用(3个月) 
+FULL_YEAR_DAYS = 365          # 完整年度数据
+
+# 当前使用的配置 - 修改这里来改变所有方法的默认值
+CURRENT_DAYS_SETTING = FULL_YEAR_DAYS
+
+# ========================================
+# 🏊‍♀️ 池子选择配置 - 在这里修改要爬取的池子
+# ========================================
+# 支持的池子列表 (从config.py中获取)
+AVAILABLE_POOLS = {
+    '3pool': {
+        'name': '3Pool (USDC/USDT/DAI)', 
+        'address': '0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7',
+        'description': '最大的稳定币池 (~$500M TVL)'
+    },
+    'frax': {
+        'name': 'FRAX Pool (FRAX/USDC)',
+        'address': '0xd632f22692FaC7611d2AA1C0D552930D43CAEd3B', 
+        'description': '算法稳定币池 (~$100M TVL)'
+    },
+    'lusd': {
+        'name': 'LUSD Pool (LUSD/3CRV)',
+        'address': '0xEd279fDD11cA84bEef15AF5D39BB4d4bEE23F0cA',
+        'description': 'Liquity USD池 (~$30M TVL)'  
+    },
+    'mim': {
+        'name': 'MIM Pool (MIM/3CRV)', 
+        'address': '0x5a6A4D54456819C6Cd2fE4de20b59F4f5F3f9b2D',
+        'description': 'Magic Internet Money池 (~$50M TVL)'
+    }
+}
+
+# 🎯 主要配置 - 修改这里来切换要爬取的池子
+# ==========================================
+TARGET_POOL = 'mim'        # 当前目标池子 (可选: '3pool', 'frax', 'lusd', 'mim')
+TARGET_POOL_ADDRESS = AVAILABLE_POOLS[TARGET_POOL]['address']
+TARGET_POOL_NAME = AVAILABLE_POOLS[TARGET_POOL]['name']
+
+# 批量模式配置
+ENABLE_BATCH_MODE = False     # 是否启用批量模式 (收集所有池子)
+BATCH_POOLS = ['3pool', 'frax', 'lusd']  # 批量模式时要收集的池子列表
+
+# 显示当前配置信息
+def show_current_config():
+    """显示当前配置"""
+    print("=" * 60)
+    print("📋 当前爬虫配置")
+    print("=" * 60)
+    print(f"🎯 目标池子: {TARGET_POOL}")
+    print(f"📛 池子名称: {TARGET_POOL_NAME}")  
+    print(f"📍 池子地址: {TARGET_POOL_ADDRESS}")
+    print(f"📊 数据天数: {CURRENT_DAYS_SETTING} 天")
+    print(f"🔄 批量模式: {'启用' if ENABLE_BATCH_MODE else '禁用'}")
+    if ENABLE_BATCH_MODE:
+        print(f"📦 批量池子: {', '.join(BATCH_POOLS)}")
+    print("=" * 60)
+    print("💡 要切换池子，请修改 TARGET_POOL 变量!")
+    print("   可选值: " + " | ".join(AVAILABLE_POOLS.keys()))
+    print("=" * 60)
+
+# 配置信息将在主程序运行时显示
+
 class FreeHistoricalDataManager:
     """免费历史数据管理器"""
     
@@ -41,7 +113,7 @@ class FreeHistoricalDataManager:
         
         print(f"📁 免费历史数据缓存目录: {self.cache_dir.absolute()}")
     
-    def get_thegraph_historical_data(self, pool_address: str, days: int = 30) -> pd.DataFrame:
+    def get_thegraph_historical_data(self, pool_address: str, days: int = CURRENT_DAYS_SETTING) -> pd.DataFrame:
         """
         方法1: 使用The Graph获取历史数据 (完全免费)
         限制: 1000次查询/天 (对个人使用足够)
@@ -166,7 +238,7 @@ class FreeHistoricalDataManager:
         
         return pd.DataFrame()
     
-    def build_historical_database(self, pool_name: str = '3pool', days_to_collect: int = 30):
+    def build_historical_database(self, pool_name: str = TARGET_POOL, days_to_collect: int = CURRENT_DAYS_SETTING):
         """
         方法3: 自建免费历史数据库
         通过定期收集实时数据来积累历史数据
@@ -231,7 +303,7 @@ class FreeHistoricalDataManager:
         
         return pd.DataFrame()
     
-    def get_comprehensive_free_data(self, pool_address: str, pool_name: str = '3pool', days: int = 30) -> pd.DataFrame:
+    def get_comprehensive_free_data(self, pool_address: str = TARGET_POOL_ADDRESS, pool_name: str = TARGET_POOL, days: int = CURRENT_DAYS_SETTING) -> pd.DataFrame:
         """
         方法4: 综合免费数据策略
         结合多个免费源获取最完整的历史数据
@@ -287,7 +359,7 @@ class FreeHistoricalDataManager:
         print("❌ 所有免费数据源都失败")
         return pd.DataFrame()
     
-    def setup_daily_collection(self, pool_name: str = '3pool'):
+    def setup_daily_collection(self, pool_name: str = TARGET_POOL):
         """
         方法5: 设置每日数据收集任务 (长期免费方案)
         建议使用cron定时任务每天运行
@@ -348,10 +420,10 @@ def demo_free_historical_data():
     manager = FreeHistoricalDataManager()
     
     # 3Pool地址
-    pool_address = "0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7"
+    pool_address = TARGET_POOL_ADDRESS
     
-    print("🎯 使用综合免费策略获取30天历史数据...")
-    df = manager.get_comprehensive_free_data(pool_address, '3pool', days=30)
+    print(f"🎯 使用综合免费策略获取{CURRENT_DAYS_SETTING}天历史数据...")
+    df = manager.get_comprehensive_free_data(pool_address, TARGET_POOL, days=CURRENT_DAYS_SETTING)
     
     if not df.empty:
         print("\n📊 数据概览:")
@@ -368,9 +440,55 @@ def demo_free_historical_data():
         print(f"\n📁 数据已保存，完全免费获取！")
     
     print("\n💡 长期方案建议:")
-    manager.setup_daily_collection('3pool')
+    manager.setup_daily_collection(TARGET_POOL)
     
     print("\n🎉 免费历史数据演示完成！")
 
+def switch_days_config(days_setting: str):
+    """切换天数配置的辅助函数"""
+    global CURRENT_DAYS_SETTING
+    
+    config_map = {
+        'quick': QUICK_TEST_DAYS,
+        'medium': MEDIUM_RANGE_DAYS, 
+        'full': FULL_YEAR_DAYS,
+        'test': QUICK_TEST_DAYS,
+        '7': QUICK_TEST_DAYS,
+        '90': MEDIUM_RANGE_DAYS,
+        '365': FULL_YEAR_DAYS
+    }
+    
+    if days_setting.lower() in config_map:
+        CURRENT_DAYS_SETTING = config_map[days_setting.lower()]
+        print(f"✅ 已切换到 {CURRENT_DAYS_SETTING} 天配置")
+    else:
+        print(f"❌ 无效配置: {days_setting}")
+        print("💡 可用选项: quick(7天) | medium(90天) | full(365天)")
+
+def demo_all_configurations():
+    """演示所有配置选项"""
+    print("🎛️  天数配置切换演示")
+    print("=" * 40)
+    
+    configs = [
+        ('quick', '快速测试'),
+        ('medium', '中期分析'), 
+        ('full', '完整年度')
+    ]
+    
+    for config, desc in configs:
+        print(f"\n🔄 切换到 {desc} 模式:")
+        switch_days_config(config)
+        
+        manager = FreeHistoricalDataManager()
+        print(f"📊 将获取 {CURRENT_DAYS_SETTING} 天数据")
+
 if __name__ == "__main__":
+    print(f"🚀 程序启动 - 当前配置: {CURRENT_DAYS_SETTING} 天")
+    print("="*50)
+    
+    # 演示配置切换 (可选)
+    # demo_all_configurations()
+    
+    # 运行主演示
     demo_free_historical_data() 

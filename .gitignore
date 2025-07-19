@@ -1,0 +1,231 @@
+# ==========================================
+# Quantum_curve_predict 项目 .gitignore
+# ==========================================
+
+# ===== Python 相关 =====
+# 字节码文件
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# ===== 环境变量和配置 =====
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# API 密钥和敏感配置
+config.ini
+secrets.json
+.secrets
+api_keys.txt
+
+# ===== 数据文件和缓存 =====
+# 历史数据缓存
+free_historical_cache/
+historical_cache/
+cache/
+data_cache/
+
+# CSV 数据文件
+*.csv
+*_historical_*.csv
+*_data_*.csv
+*_cache_*.csv
+
+# JSON 数据文件
+*_data.json
+*_cache.json
+historical_data.json
+
+# 数据库文件
+*.db
+*.sqlite
+*.sqlite3
+
+# ===== 机器学习模型 =====
+# PyTorch 模型
+*.pth
+*.pt
+best_*.pth
+checkpoint_*.pth
+model_*.pth
+
+# TensorFlow 模型
+*.h5
+*.hdf5
+saved_model/
+checkpoints/
+
+# Scikit-learn 模型
+*.pkl
+*.pickle
+*.joblib
+
+# ===== 日志文件 =====
+*.log
+*.out
+logs/
+log/
+*.log.*
+
+# ===== IDE 和编辑器 =====
+# VSCode
+.vscode/
+
+# PyCharm
+.idea/
+*.iml
+*.iws
+
+# Spyder
+.spyderproject
+.spyproject
+
+# Rope
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# ===== 系统文件 =====
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+
+# ===== 项目特定 =====
+# 临时脚本和测试文件
+temp_*.py
+test_*.py
+debug_*.py
+scratch_*.py
+
+# 输出文件
+output/
+results/
+plots/
+figures/
+
+# 备份文件
+*.bak
+*.backup
+*.old
+
+# 压缩文件
+*.zip
+*.tar.gz
+*.rar
+
+# ===== Web3 和区块链相关 =====
+# 私钥文件 (绝对不要提交!)
+private_key*
+*.key
+keystore/
+wallets/
+
+# 节点数据
+node_modules/
+geth/
+blockchain_data/
+
+# ===== Curve 项目特定 =====
+# 池子特定的历史数据
+3pool_*.csv
+frax_*.csv
+lusd_*.csv
+mim_*.csv
+
+# 自建数据库文件
+*_self_built_*.csv
+*_comprehensive_*.csv
+
+# 实时数据快照
+realtime_*.json
+snapshot_*.json
+
+# 演示和测试输出
+demo_*.txt
+switch_pool_*.py
+collect_*_example.py
+
+# ===== 文档草稿 =====
+# 临时文档
+DRAFT_*.md
+TODO_*.md
+NOTES_*.md
+
+# ===== 其他临时文件 =====
+.tmp/
+tmp/
+temp/
+*.tmp
+*.temp 
