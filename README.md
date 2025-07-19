@@ -79,8 +79,14 @@ python demo_real_data.py
 # 🆕 测试CSV功能
 python example_csv_usage.py
 
+# 🆓 测试免费历史数据获取
+python free_historical_data.py
+
 # 检查配置状态
 python config.py
+
+# 🏊 扩展更多池子支持
+python extend_pools.py
 ```
 
 ## 使用方法
@@ -152,10 +158,15 @@ Quantum_curve_predict/
 ├── config.py               # 系统配置管理 🆕
 ├── demo_real_data.py       # 真实数据演示脚本 🆕
 ├── example_csv_usage.py    # CSV功能使用示例 🆕
+├── free_historical_data.py # 免费历史数据获取 🆕
+├── quick_free_demo.py      # 免费数据快速演示 🆕
 ├── quick_demo.py           # 快速演示脚本
 ├── requirements.txt        # 依赖列表
 ├── README.md              # 项目说明
 ├── REAL_DATA_GUIDE.md     # 真实数据获取指南 🆕
+├── DATA_SOURCES.md        # 数据源详细说明 🆕
+├── POOL_SUPPORT_ANALYSIS.md # 池子支持分析 🆕
+├── extend_pools.py        # 池子扩展示例代码 🆕
 ├── best_curve_model.pth   # 训练好的模型 (训练后生成)
 ├── training_curve.png     # 训练曲线图 (训练后生成)
 └── trade_history.json     # 交易历史记录 (执行后生成)
@@ -219,6 +230,13 @@ Quantum_curve_predict/
 - ✅ **数据读取**: 支持从CSV文件训练模型
 - ✅ **批量操作**: 一次性处理多个池子数据
 
+### 🆓 免费历史数据 (新功能)
+- ✅ **The Graph**: 1000次查询/天，获取30天历史数据
+- ✅ **DefiLlama**: 无限制，免费APY历史数据
+- ✅ **自建数据库**: 通过定期收集积累历史数据
+- ✅ **综合策略**: 多源免费数据自动合并
+- ✅ **定时收集**: 设置cron任务长期积累数据
+
 支持的数据类型：
 - 实时池子状态 (余额、虚拟价格、APY) → CSV保存
 - 历史交易数据 (30天内的每小时数据) → CSV保存
@@ -247,6 +265,9 @@ curve_data/
 ```bash
 # 运行完整演示，包括真实数据获取
 python demo_real_data.py
+
+# 🆓 或者运行免费历史数据演示
+python quick_free_demo.py
 ```
 
 ### 方式2: 设置真实数据
@@ -271,7 +292,16 @@ python train_curve_model.py --use-real-data
 python run_curve_rebalancer.py --mode single
 ```
 
-### 方式3: 无API密钥使用
+### 方式3: 🆓 免费历史数据 (无需API密钥)
+```bash
+# 完全免费获取历史数据
+python free_historical_data.py
+
+# 使用免费数据训练模型
+python train_curve_model.py --use-real-data --csv-data-dir free_historical_cache
+```
+
+### 方式4: 无API密钥使用
 ```bash
 # 系统会自动使用模拟数据
 python quick_demo.py
@@ -280,6 +310,9 @@ python quick_demo.py
 ## 📚 详细文档
 
 - 📖 [真实数据获取指南](REAL_DATA_GUIDE.md) - 完整的数据获取教程
+- 📖 [数据源详解](DATA_SOURCES.md) - 各平台API详细说明
+- 🆓 [免费历史数据策略](free_historical_data.py) - 无需付费获取历史数据
+- 🏊 [池子支持分析](POOL_SUPPORT_ANALYSIS.md) - 支持池子详情和扩展方案
 - 📊 数据源对比和选择建议
 - 🔧 API密钥配置和故障排除
 - 💡 最佳实践和性能优化
