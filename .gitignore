@@ -82,10 +82,10 @@ api_keys.txt
 # data_cache/
 
 # CSV 数据文件
-*.csv
-*_historical_*.csv
-*_data_*.csv
-*_cache_*.csv
+# *.csv
+# *_historical_*.csv
+# *_data_*.csv
+# *_cache_*.csv
 
 # JSON 数据文件
 *_data.json
