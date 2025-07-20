@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-免费历史数据获取策略
-专门针对不想花钱但需要历史数据的场景
+免費歷史數據獲取策略
+專門針對不想花錢但需要歷史數據的場景
 """
 
 import requests
@@ -14,48 +14,48 @@ import json
 from pathlib import Path
 
 # ========================================
-# 🔧 配置参数 - 在这里修改天数设置
+# 🔧 配置參數 - 在這裡修改天數設置
 # ========================================
-DEFAULT_HISTORICAL_DAYS = 365  # 默认获取1年历史数据
-MAX_THEGRAPH_DAYS = 365       # The Graph API最大支持天数 (已废弃)
-DEFAULT_SELF_BUILT_DAYS = 365 # 自建数据库默认天数
+DEFAULT_HISTORICAL_DAYS = 365  # 預設獲取1年歷史數據
+MAX_THEGRAPH_DAYS = 365       # The Graph API最大支持天數 (已廢棄)
+DEFAULT_SELF_BUILT_DAYS = 365 # 自建數據庫預設天數
 
-# 快速配置选项
-QUICK_TEST_DAYS = 7           # 快速测试用(7天)
-MEDIUM_RANGE_DAYS = 90        # 中期分析用(3个月) 
-FULL_YEAR_DAYS = 365          # 完整年度数据
+# 快速配置選項
+QUICK_TEST_DAYS = 7           # 快速測試用(7天)
+MEDIUM_RANGE_DAYS = 90        # 中期分析用(3個月) 
+FULL_YEAR_DAYS = 365          # 完整年度數據
 
-# 当前使用的配置 - 修改这里来改变所有方法的默认值
-CURRENT_DAYS_SETTING =  FULL_YEAR_DAYS  # 🔥 暂时改为7天避免长时间等待
+# 當前使用的配置 - 修改這裡來改變所有方法的預設值
+CURRENT_DAYS_SETTING =  FULL_YEAR_DAYS  # 🔥 暫時改為7天避免長時間等待
 
 # ========================================
-# 🚨 API 状态配置 - 控制哪些数据源可用
+# 🚨 API 狀態配置 - 控制哪些數據源可用
 # ========================================
 ENABLE_THEGRAPH_API = False     # ❌ The Graph API已被移除，禁用
-ENABLE_CURVE_API = True         # ✅ Curve API (主要数据源)
-ENABLE_DEFILLAMA = True         # ✅ DefiLlama APY数据  
-ENABLE_SELF_BUILT = True        # ✅ 自建数据库 (作为最后备份)
-ENABLE_SSL_VERIFICATION = False # 🔧 禁用SSL验证来避免证书错误
+ENABLE_CURVE_API = True         # ✅ Curve API (主要數據源)
+ENABLE_DEFILLAMA = True         # ✅ DefiLlama APY數據  
+ENABLE_SELF_BUILT = True        # ✅ 自建數據庫 (作為最後備份)
+ENABLE_SSL_VERIFICATION = False # 🔧 禁用SSL驗證來避免證書錯誤
 
-# 性能优化配置
-MAX_COLLECTION_ATTEMPTS = 50   # 🔥 限制最大收集次数，避免无限循环
-COLLECTION_BATCH_SIZE = 10     # 每批次收集的数据点数量
-REQUEST_TIMEOUT = 5            # API请求超时时间 (秒)
-REQUEST_RETRY_DELAY = 2        # 请求失败后重试延迟 (秒)
+# 性能優化配置
+MAX_COLLECTION_ATTEMPTS = 50   # 🔥 限制最大收集次數，避免無限循環
+COLLECTION_BATCH_SIZE = 10     # 每批次收集的數據點數量
+REQUEST_TIMEOUT = 5            # API請求超時時間 (秒)
+REQUEST_RETRY_DELAY = 2        # 請求失敗後重試延遲 (秒)
 
 # ========================================
-# 🎯 所有主要Curve池子配置 - 扩展版
+# 🎯 所有主要Curve池子配置 - 擴展版
 # ========================================
 
 # 完整的主要Curve池子配置
 AVAILABLE_POOLS = {
-    # === 🏆 主要稳定币池 (Base Pools) ===
+    # === 🏆 主要穩定幣池 (Base Pools) ===
     '3pool': {
         'address': '0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7',
         'name': 'DAI/USDC/USDT',
         'tokens': ['DAI', 'USDC', 'USDT'],
         'type': 'stable',
-        'priority': 1  # 最高优先级
+        'priority': 1  # 最高優先級
     },
     'frax': {
         'address': '0xd632f22692FaC7611d2AA1C0D552930D43CAEd3B', 
@@ -206,7 +206,7 @@ AVAILABLE_POOLS = {
         'priority': 4
     },
     
-    # === 🌍 国际化稳定币 ===
+    # === 🌍 國際化穩定幣 ===
     'eurs': {
         'address': '0x0Ce6a5fF5217e38315f87032CF90686C96627CAA',
         'name': 'EURS/sEUR',
@@ -270,7 +270,7 @@ AVAILABLE_POOLS = {
         'name': 'UST/3CRV',
         'tokens': ['UST', '3CRV'],
         'type': 'metapool',
-        'priority': 5  # 较低优先级因为UST已deprecated
+        'priority': 5  # 較低優先級因为UST已deprecated
     },
     'rsv': {
         'address': '0xC18cC39da8b11dA8c3541C598eE022258F9744da',
@@ -325,27 +325,27 @@ AVAILABLE_POOLS = {
     }
 }
 
-# 根据优先级和类型筛选池子的函数
+# 根據優先級和類型篩選池子的函数
 def get_pools_by_priority(min_priority=1, max_priority=5, pool_types=None):
     """
-    根据优先级和类型筛选池子
+    根據優先級和類型篩選池子
     
     Args:
-        min_priority: 最小优先级 (1=最高优先级)  
-        max_priority: 最大优先级 (5=最低优先级)
-        pool_types: 池子类型列表，如 ['stable', 'metapool'] 
+        min_priority: 最小優先級 (1=最高優先級)  
+        max_priority: 最大優先級 (5=最低優先級)
+        pool_types: 池子類型列表，如 ['stable', 'metapool'] 
     
     Returns:
-        筛选后的池子字典
+        篩選後的池子字典
     """
     filtered_pools = {}
     
     for pool_name, pool_info in AVAILABLE_POOLS.items():
-        # 优先级筛选
+        # 優先級篩選
         if not (min_priority <= pool_info['priority'] <= max_priority):
             continue
             
-        # 类型筛选
+        # 類型篩選
         if pool_types and pool_info['type'] not in pool_types:
             continue
             
@@ -354,24 +354,24 @@ def get_pools_by_priority(min_priority=1, max_priority=5, pool_types=None):
     return filtered_pools
 
 def get_high_priority_pools():
-    """获取高优先级池子 (priority 1-2)"""
+    """獲取高優先級池子 (priority 1-2)"""
     return get_pools_by_priority(min_priority=1, max_priority=2)
 
 def get_stable_pools():
-    """获取所有稳定币相关池子"""
+    """獲取所有穩定幣相關池子"""
     return get_pools_by_priority(pool_types=['stable', 'metapool', 'stable_4pool'])
 
 def get_all_main_pools():
-    """获取所有主要池子 (priority 1-3)"""  
+    """獲取所有主要池子 (priority 1-3)"""  
     return get_pools_by_priority(min_priority=1, max_priority=3)
 
 # 更新原有配置以保持兼容性
-TARGET_POOL = '3pool'  # 默认池子
+TARGET_POOL = '3pool'  # 預設池子
 TARGET_POOL_ADDRESS = AVAILABLE_POOLS[TARGET_POOL]['address']
 TARGET_POOL_NAME = AVAILABLE_POOLS[TARGET_POOL]['name']
 
 # 批量模式配置
-ENABLE_BATCH_MODE = False     # 是否启用批量模式 (收集所有池子)
+ENABLE_BATCH_MODE = False     # 是否啟用批量模式 (收集所有池子)
 BATCH_POOLS = ['3pool', 'frax', 'lusd']  # 批量模式时要收集的池子列表
 
 # 显示当前配置信息
@@ -1028,7 +1028,7 @@ if __name__ == "__main__":
 
     def get_all_main_pools_data(self, days: int = CURRENT_DAYS_SETTING) -> dict:
         """
-        获取所有主要池子数据 (优先级 1-3)
+        獲取所有主要池子数据 (优先级 1-3)
         
         Returns:
             {pool_name: DataFrame} 字典
@@ -1040,7 +1040,7 @@ if __name__ == "__main__":
 
     def get_high_priority_pools_data(self, days: int = CURRENT_DAYS_SETTING) -> dict:
         """
-        获取高优先级池子数据 (优先级 1-2)
+        獲取高優先級池子数据 (优先级 1-2)
         
         Returns:
             {pool_name: DataFrame} 字典  
@@ -1300,8 +1300,8 @@ def demo_free_historical_data():
     print("🎉 演示完成! 主要功能已验证:")
     print("   ✅ 单个池子数据获取")  
     print("   ✅ 批量数据获取")
-    print("   ✅ 按优先级筛选")
-    print("   ✅ 按类型筛选")
+    print("   ✅ 按優先級篩選")
+    print("   ✅ 按類型篩選")
     print("   ✅ 数据分析")
     print("   ✅ Excel导出")
     print("=" * 60)
@@ -1375,8 +1375,8 @@ def show_available_pools_info():
                            if info['priority'] == priority}
         
         if pools_at_priority:
-            priority_labels = {1: "🏆 最高优先级", 2: "⭐ 高优先级", 3: "📈 中优先级", 
-                             4: "📊 低优先级", 5: "🔽 最低优先级"}
+            priority_labels = {1: "🏆 最高優先級", 2: "⭐ 高优先级", 3: "📈 中优先级", 
+                             4: "📊 低优先级", 5: "🔽 最低優先級"}
             
             print(f"\n{priority_labels.get(priority, f'优先级 {priority}')} ({len(pools_at_priority)} 个池子):")
             print("-" * 60)
