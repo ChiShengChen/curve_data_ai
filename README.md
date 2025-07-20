@@ -4,7 +4,6 @@
 
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Prediction Accuracy](https://img.shields.io/badge/預測準確率-66%--75%-green.svg)]()
 [![Pool Coverage](https://img.shields.io/badge/池子覆蓋-28個池子-blue.svg)]()
 
 > 🚀 **即時預測Curve池子Virtual Price變化，智慧識別最佳投資機會**
