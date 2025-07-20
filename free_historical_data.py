@@ -374,16 +374,16 @@ TARGET_POOL_NAME = AVAILABLE_POOLS[TARGET_POOL]['name']
 ENABLE_BATCH_MODE = False     # 是否啟用批量模式 (收集所有池子)
 BATCH_POOLS = ['3pool', 'frax', 'lusd']  # 批量模式时要收集的池子列表
 
-# 显示当前配置信息
+# 顯示当前配置信息
 def show_current_config():
-    """显示当前配置"""
+    """顯示当前配置"""
     print("=" * 60)
     print("📋 当前爬虫配置")
     print("=" * 60)
     print(f"🎯 目标池子: {TARGET_POOL}")
     print(f"📛 池子名称: {TARGET_POOL_NAME}")  
     print(f"📍 池子地址: {TARGET_POOL_ADDRESS}")
-    print(f"📊 数据天数: {CURRENT_DAYS_SETTING} 天")
+    print(f"📊 數據天数: {CURRENT_DAYS_SETTING} 天")
     print(f"🔄 批量模式: {'启用' if ENABLE_BATCH_MODE else '禁用'}")
     if ENABLE_BATCH_MODE:
         print(f"📦 批量池子: {', '.join(BATCH_POOLS)}")
@@ -392,16 +392,16 @@ def show_current_config():
     print("   可选值: " + " | ".join(AVAILABLE_POOLS.keys()))
     print("=" * 60)
 
-# 配置信息将在主程序运行时显示
+# 配置信息将在主程序運行时顯示
 
 class FreeHistoricalDataManager:
-    """免费历史数据管理器"""
+    """免费历史數據管理器"""
     
     def __init__(self, cache_dir: str = "free_historical_cache"):
         self.cache_dir = Path(cache_dir)
         self.cache_dir.mkdir(exist_ok=True)
         
-        # 免费数据源
+        # 免费數據源
         self.sources = {
             'thegraph': {
                 'url': 'https://api.thegraph.com/subgraphs/name/messari/curve-finance-ethereum',
@@ -420,11 +420,11 @@ class FreeHistoricalDataManager:
             }
         }
         
-        print(f"📁 免费历史数据缓存目录: {self.cache_dir.absolute()}")
+        print(f"📁 免费历史數據缓存目录: {self.cache_dir.absolute()}")
     
     def get_thegraph_historical_data(self, pool_address: str, days: int = CURRENT_DAYS_SETTING) -> pd.DataFrame:
         """
-        方法1: 使用The Graph获取历史数据 (已废弃)
+        方法1: 使用The Graph獲取历史數據 (已废弃)
         ❌ 注意: The Graph API端点已被移除
         """
         
@@ -432,9 +432,9 @@ class FreeHistoricalDataManager:
             print(f"⚠️  [The Graph] API已被禁用 - 端点已废弃")
             return pd.DataFrame()
         
-        print(f"📊 [The Graph] 尝试获取 {days} 天历史数据...")
+        print(f"📊 [The Graph] 尝试獲取 {days} 天历史數據...")
         
-        # GraphQL查询 - 分批获取避免超时
+        # GraphQL查询 - 分批獲取避免超时
         query = """
         {
           pool(id: "%s") {
@@ -483,10 +483,10 @@ class FreeHistoricalDataManager:
             
             pool_data = data['data']['pool']
             if not pool_data:
-                print(f"❌ 未找到池子数据: {pool_address}")
+                print(f"❌ 未找到池子數據: {pool_address}")
                 return pd.DataFrame()
             
-            # 解析数据
+            # 解析數據
             records = []
             snapshots = pool_data['dailyPoolSnapshots']
             coins = pool_data['coins']
@@ -499,7 +499,7 @@ class FreeHistoricalDataManager:
                     'virtual_price': float(snapshot.get('virtualPrice', 1e18)) / 1e18
                 }
                 
-                # 解析余额数据
+                # 解析余额數據
                 balances = snapshot.get('balances', [])
                 rates = snapshot.get('rates', [])
                 
@@ -516,7 +516,7 @@ class FreeHistoricalDataManager:
             df = pd.DataFrame(records)
             df = df.sort_values('timestamp').reset_index(drop=True)
             
-            print(f"✅ [The Graph] 获取到 {len(df)} 条免费历史记录")
+            print(f"✅ [The Graph] 獲取到 {len(df)} 条免费历史记录")
             return df
             
         except Exception as e:
@@ -525,17 +525,17 @@ class FreeHistoricalDataManager:
     
     def get_defillama_apy_history(self, pool_address: str) -> pd.DataFrame:
         """
-        方法2: 从DefiLlama获取APY历史 (完全免费)
+        方法2: 从DefiLlama獲取APY历史 (完全免费)
         """
         
         if not ENABLE_DEFILLAMA:
             print(f"⚠️  [DefiLlama] API已被禁用")
             return pd.DataFrame()
             
-        print(f"📈 [DefiLlama] 获取APY历史数据...")
+        print(f"📈 [DefiLlama] 獲取APY历史數據...")
         
         try:
-            # 获取池子APY历史
+            # 獲取池子APY历史
             url = f"https://yields.llama.fi/chart/{pool_address.lower()}"
             
             # 配置SSL验证和超时
@@ -559,10 +559,10 @@ class FreeHistoricalDataManager:
                         })
                     
                     df = pd.DataFrame(records)
-                    print(f"✅ [DefiLlama] 获取到 {len(df)} 条APY历史记录")
+                    print(f"✅ [DefiLlama] 獲取到 {len(df)} 条APY历史记录")
                     return df
                 else:
-                    print(f"⚠️  [DefiLlama] 响应中无数据字段")
+                    print(f"⚠️  [DefiLlama] 响应中无數據字段")
             else:
                 print(f"❌ [DefiLlama] HTTP错误: {response.status_code}")
         
@@ -577,15 +577,15 @@ class FreeHistoricalDataManager:
     
     def build_historical_database(self, pool_name: str = TARGET_POOL, days_to_collect: int = CURRENT_DAYS_SETTING):
         """
-        方法3: 自建免费历史数据库 (优化版 - 避免无限循环)
-        通过有限次数尝试获取实时数据，然后生成合成历史数据
+        方法3: 自建免费历史數據库 (优化版 - 避免无限循环)
+        通过有限次数尝试獲取实时數據，然后生成合成历史數據
         """
         
         if not ENABLE_SELF_BUILT:
-            print(f"⚠️  自建数据库已被禁用")
+            print(f"⚠️  自建數據库已被禁用")
             return pd.DataFrame()
         
-        print(f"🏗️  开始自建 {pool_name} 历史数据库 ({days_to_collect} 天)...")
+        print(f"🏗️  開始自建 {pool_name} 历史數據库 ({days_to_collect} 天)...")
         
         try:
             from real_data_collector import CurveRealDataCollector
@@ -599,15 +599,15 @@ class FreeHistoricalDataManager:
             successful_attempts = 0
             base_data = None
             
-            print(f"🔄 尝试获取基础数据 (最多 {max_attempts} 次)...")
+            print(f"🔄 尝试獲取基础數據 (最多 {max_attempts} 次)...")
             
-            # 先尝试获取一次有效的实时数据作为基准
+            # 先尝试獲取一次有效的实时數據作为基准
             for attempt in range(max_attempts):
                 try:
                     pool_data = collector.get_real_time_data(pool_name)
                     if pool_data:
                         base_data = pool_data
-                        print(f"✅ 第 {attempt + 1} 次尝试成功获取基础数据")
+                        print(f"✅ 第 {attempt + 1} 次尝试成功獲取基础數據")
                         break
                     
                     if attempt % 10 == 0 and attempt > 0:
@@ -620,18 +620,18 @@ class FreeHistoricalDataManager:
                         print(f"⚠️  第 {attempt + 1} 次尝试失败: {str(e)[:50]}...")
                     continue
             
-            # 如果无法获取真实数据，生成合成数据
+            # 如果无法獲取真实數據，生成合成數據
             if not base_data:
-                print("⚠️  无法获取真实数据，生成合成历史数据...")
+                print("⚠️  无法獲取真实數據，生成合成历史數據...")
                 return self._generate_synthetic_data(pool_name, days_to_collect)
             
-            # 基于真实数据生成历史数据
-            print(f"📊 基于真实数据生成 {days_to_collect} 天历史数据...")
+            # 基于真实數據生成历史數據
+            print(f"📊 基于真实數據生成 {days_to_collect} 天历史數據...")
             simulated_records = []
             
             for day in range(days_to_collect):
-                # 每天生成几个数据点而不是每小时
-                points_per_day = 4  # 每6小时一个数据点
+                # 每天生成几个數據点而不是每小时
+                points_per_day = 4  # 每6小时一个數據点
                 
                 for point in range(points_per_day):
                     hour_offset = day * 24 + point * 6
@@ -655,29 +655,29 @@ class FreeHistoricalDataManager:
                     
                     simulated_records.append(record)
                 
-                # 显示进度
+                # 顯示进度
                 if day % max(1, days_to_collect // 10) == 0:
                     progress = (day / days_to_collect) * 100
                     print(f"📈 生成进度: {progress:.0f}% ({day}/{days_to_collect} 天)")
         
         except ImportError as e:
             print(f"❌ 导入依赖失败: {e}")
-            print("💡 生成基础合成数据...")
+            print("💡 生成基础合成數據...")
             return self._generate_synthetic_data(pool_name, days_to_collect)
         except Exception as e:
-            print(f"❌ 自建数据库失败: {e}")
-            print("💡 fallback到合成数据...")
+            print(f"❌ 自建數據库失败: {e}")
+            print("💡 fallback到合成數據...")
             return self._generate_synthetic_data(pool_name, days_to_collect)
         
         if simulated_records:
             df = pd.DataFrame(simulated_records)
             
-            # 保存自建历史数据
+            # 保存自建历史數據
             filename = f"{pool_name}_self_built_historical_{days_to_collect}d.csv"
             filepath = self.cache_dir / filename
             df.to_csv(filepath, index=False, encoding='utf-8')
             
-            print(f"✅ 自建历史数据库完成: {filepath}")
+            print(f"✅ 自建历史數據库完成: {filepath}")
             print(f"📊 总计 {len(df)} 条记录，时间跨度 {days_to_collect} 天")
             
             return df
@@ -685,11 +685,11 @@ class FreeHistoricalDataManager:
         return pd.DataFrame()
 
     def _generate_synthetic_data(self, pool_name: str, days: int) -> pd.DataFrame:
-        """生成合成历史数据 - 当所有真实数据源都失败时使用"""
+        """生成合成历史數據 - 当所有真实數據源都失败时使用"""
         
-        print(f"🎭 为 {pool_name} 生成 {days} 天合成历史数据...")
+        print(f"🎭 为 {pool_name} 生成 {days} 天合成历史數據...")
         
-        # 根据池子类型设置不同的基础参数
+        # 根据池子類型設置不同的基础参数
         pool_configs = {
             'mim': {
                 'tokens': ['MIM', 'USDC', 'USDT'], 
@@ -722,7 +722,7 @@ class FreeHistoricalDataManager:
         # 生成时间序列
         dates = pd.date_range(
             end=datetime.now(),
-            periods=days * 6,  # 每天6个数据点
+            periods=days * 6,  # 每天6个數據点
             freq='4H'  # 每4小时一个点
         )
         
@@ -751,23 +751,23 @@ class FreeHistoricalDataManager:
         
         df = pd.DataFrame(records)
         
-        # 保存合成数据
+        # 保存合成數據
         filename = f"{pool_name}_synthetic_historical_{days}d.csv"  
         filepath = self.cache_dir / filename
         df.to_csv(filepath, index=False, encoding='utf-8')
         
-        print(f"✅ 合成数据生成完成: {filepath}")
+        print(f"✅ 合成數據生成完成: {filepath}")
         print(f"📊 生成了 {len(df)} 条合成记录")
         
         return df
     
     def get_comprehensive_free_data(self, pool_address: str = TARGET_POOL_ADDRESS, pool_name: str = TARGET_POOL, days: int = CURRENT_DAYS_SETTING) -> pd.DataFrame:
         """
-        方法4: 综合免费数据策略 (优化版)
-        结合多个免费源获取最完整的历史数据，包含fallback机制
+        方法4: 综合免费數據策略 (优化版)
+        结合多个免费源獲取最完整的历史數據，包含fallback机制
         """
         
-        print(f"🔄 综合免费策略获取 {pool_name} 历史数据 ({days} 天)...")
+        print(f"🔄 综合免费策略獲取 {pool_name} 历史數據 ({days} 天)...")
         
         all_data = []
         data_sources_tried = []
@@ -800,12 +800,12 @@ class FreeHistoricalDataManager:
                 print(f"⚠️  DefiLlama尝试失败: {str(e)[:50]}...")
                 data_sources_tried.append('DefiLlama (失败)')
         
-        # 3. 检查是否需要自建数据库补充
+        # 3. 檢查是否需要自建數據库补充
         total_records = sum(len(df) for df in all_data) if all_data else 0
         min_required_records = max(days // 10, 5)  # 至少需要的记录数
         
         if total_records < min_required_records:
-            print(f"📊 免费API数据不足 ({total_records} < {min_required_records})，启用自建历史数据库...")
+            print(f"📊 免费API數據不足 ({total_records} < {min_required_records})，启用自建历史數據库...")
             
             if ENABLE_SELF_BUILT:
                 try:
@@ -813,23 +813,23 @@ class FreeHistoricalDataManager:
                     if not self_built_data.empty:
                         self_built_data['source'] = 'self_built'
                         all_data.append(self_built_data)
-                        print(f"✅ 自建数据: {len(self_built_data)} 条记录")
-                    data_sources_tried.append('自建数据库')
+                        print(f"✅ 自建數據: {len(self_built_data)} 条记录")
+                    data_sources_tried.append('自建數據库')
                 except Exception as e:
-                    print(f"⚠️  自建数据库失败: {str(e)[:50]}...")
-                    data_sources_tried.append('自建数据库 (失败)')
+                    print(f"⚠️  自建數據库失败: {str(e)[:50]}...")
+                    data_sources_tried.append('自建數據库 (失败)')
             else:
-                print("⚠️  自建数据库已禁用")
+                print("⚠️  自建數據库已禁用")
         
-        # 4. 合并所有数据源
+        # 4. 合并所有數據源
         if all_data:
             try:
-                # 按时间戳合并数据
+                # 按时间戳合并數據
                 combined_df = pd.concat(all_data, ignore_index=True)
                 
                 # 确保时间戳列存在且格式正确
                 if 'timestamp' not in combined_df.columns:
-                    print("⚠️  数据中缺少timestamp列，添加默认时间戳")
+                    print("⚠️  數據中缺少timestamp列，添加預設时间戳")
                     combined_df['timestamp'] = pd.date_range(
                         end=datetime.now(),
                         periods=len(combined_df),
@@ -842,15 +842,15 @@ class FreeHistoricalDataManager:
                 if len(combined_df) > 1:
                     combined_df = combined_df.drop_duplicates(subset=['timestamp'], keep='last')
                 
-                # 保存综合数据
+                # 保存综合數據
                 filename = f"{pool_name}_comprehensive_free_historical_{days}d.csv"
                 filepath = self.cache_dir / filename
                 combined_df.to_csv(filepath, index=False, encoding='utf-8')
                 
-                print(f"🎉 综合免费历史数据获取完成!")
+                print(f"🎉 综合免费历史數據獲取完成!")
                 print(f"📁 保存位置: {filepath}")
                 print(f"📊 总记录数: {len(combined_df)}")
-                print(f"🔄 数据来源: {', '.join([df['source'].iloc[0] for df in all_data if 'source' in df.columns and len(df) > 0])}")
+                print(f"🔄 數據来源: {', '.join([df['source'].iloc[0] for df in all_data if 'source' in df.columns and len(df) > 0])}")
                 
                 if 'timestamp' in combined_df.columns and len(combined_df) > 0:
                     print(f"🗓️  时间范围: {combined_df['timestamp'].min()} 到 {combined_df['timestamp'].max()}")
@@ -858,29 +858,29 @@ class FreeHistoricalDataManager:
                 return combined_df
             
             except Exception as e:
-                print(f"❌ 数据合并失败: {e}")
-                # 返回第一个可用的数据源
+                print(f"❌ 數據合并失败: {e}")
+                # 返回第一个可用的數據源
                 if all_data:
-                    print(f"💡 返回第一个可用数据源 ({len(all_data[0])} 条记录)")
+                    print(f"💡 返回第一个可用數據源 ({len(all_data[0])} 条记录)")
                     return all_data[0]
         
-        print(f"❌ 所有免费数据源都失败")
-        print(f"🔍 已尝试的数据源: {', '.join(data_sources_tried)}")
-        print(f"💡 建议: 检查网络连接或启用SSL验证")
+        print(f"❌ 所有免费數據源都失败")
+        print(f"🔍 已尝试的數據源: {', '.join(data_sources_tried)}")
+        print(f"💡 建议: 檢查网络连接或启用SSL验证")
         
         return pd.DataFrame()
     
     def setup_daily_collection(self, pool_name: str = TARGET_POOL):
         """
-        方法5: 设置每日数据收集任务 (长期免费方案)
-        建议使用cron定时任务每天运行
+        方法5: 設置每日數據收集任务 (长期免费方案)
+        建议使用cron定时任务每天運行
         """
         
-        print(f"⏰ 设置 {pool_name} 每日数据收集...")
+        print(f"⏰ 設置 {pool_name} 每日數據收集...")
         
         # 创建每日收集脚本
         script_content = f"""#!/usr/bin/env python3
-# 每日数据收集脚本 - 由cron定时运行
+# 每日數據收集脚本 - 由cron定时運行
 import sys
 sys.path.append('/path/to/your/Quantum_curve_predict')
 
@@ -890,11 +890,11 @@ from datetime import datetime
 def daily_collect():
     manager = FreeHistoricalDataManager()
     
-    # 获取今日数据
+    # 獲取今日數據
     df = manager.get_thegraph_historical_data('0xbebc44782c7db0a1a60cb6fe97d0b483032ff1c7', days=1)
     
     if not df.empty:
-        # 追加到历史数据文件
+        # 追加到历史數據文件
         filename = 'daily_collection_{pool_name}.csv'
         filepath = manager.cache_dir / filename
         
@@ -905,9 +905,9 @@ def daily_collect():
             combined_df = df
         
         combined_df.to_csv(filepath, index=False, encoding='utf-8')
-        print(f"✅ {{datetime.now()}}: 每日数据收集完成，共{{len(combined_df)}}条记录")
+        print(f"✅ {{datetime.now()}}: 每日數據收集完成，共{{len(combined_df)}}条记录")
     else:
-        print(f"❌ {{datetime.now()}}: 今日数据收集失败")
+        print(f"❌ {{datetime.now()}}: 今日數據收集失败")
 
 if __name__ == "__main__":
     daily_collect()
@@ -918,18 +918,18 @@ if __name__ == "__main__":
             f.write(script_content)
         
         print(f"📝 每日收集脚本已创建: {script_file}")
-        print("💡 设置cron定时任务:")
+        print("💡 設置cron定时任务:")
         print(f"   0 1 * * * python3 {script_file.absolute()}")
-        print("   (每天凌晨1点运行)")
+        print("   (每天凌晨1点運行)")
 
     def get_batch_historical_data(self, pools_dict: dict, days: int = CURRENT_DAYS_SETTING, 
                                  max_concurrent: int = 3, delay_between_batches: int = 2) -> dict:
         """
-        批量获取多个池子的历史数据
+        批量獲取多个池子的历史數據
         
         Args:
             pools_dict: 池子字典 (来自 get_pools_by_priority 等函数)
-            days: 获取天数
+            days: 獲取天数
             max_concurrent: 最大并发数量
             delay_between_batches: 批次间延迟(秒)
         
@@ -937,7 +937,7 @@ if __name__ == "__main__":
             {pool_name: DataFrame} 字典
         """
         
-        print(f"🚀 批量获取 {len(pools_dict)} 个池子的 {days} 天历史数据...")
+        print(f"🚀 批量獲取 {len(pools_dict)} 个池子的 {days} 天历史數據...")
         print(f"📋 池子列表: {', '.join(pools_dict.keys())}")
         print("="*60)
         
@@ -945,10 +945,10 @@ if __name__ == "__main__":
         successful = 0
         failed = 0
         
-        # 按优先级排序池子
+        # 按優先級排序池子
         sorted_pools = sorted(pools_dict.items(), key=lambda x: x[1]['priority'])
         
-        # 分批处理避免API限制
+        # 分批處理避免API限制
         import math
         total_batches = math.ceil(len(sorted_pools) / max_concurrent)
         
@@ -957,15 +957,15 @@ if __name__ == "__main__":
             end_idx = min(start_idx + max_concurrent, len(sorted_pools))
             current_batch = sorted_pools[start_idx:end_idx]
             
-            print(f"📦 处理批次 {batch_idx + 1}/{total_batches}")
+            print(f"📦 處理批次 {batch_idx + 1}/{total_batches}")
             print(f"   池子: {[pool[0] for pool in current_batch]}")
             
-            # 处理当前批次
+            # 處理当前批次
             for pool_name, pool_info in current_batch:
                 try:
-                    print(f"  🔄 [{pool_name}] {pool_info['name']} (优先级:{pool_info['priority']})")
+                    print(f"  🔄 [{pool_name}] {pool_info['name']} (優先級:{pool_info['priority']})")
                     
-                    # 检查缓存
+                    # 檢查缓存
                     cache_file = self.cache_dir / f"{pool_name}_batch_historical_{days}d.csv"
                     if cache_file.exists():
                         try:
@@ -978,7 +978,7 @@ if __name__ == "__main__":
                         except Exception as e:
                             print(f"  ⚠️  [{pool_name}] 缓存读取失败: {e}")
                     
-                    # 获取新数据  
+                    # 獲取新數據  
                     df = self.get_comprehensive_free_data(
                         pool_info['address'], 
                         pool_name, 
@@ -996,30 +996,30 @@ if __name__ == "__main__":
                         
                         results[pool_name] = df
                         successful += 1
-                        print(f"  ✅ [{pool_name}] 获取成功: {len(df)} 条记录")
+                        print(f"  ✅ [{pool_name}] 獲取成功: {len(df)} 条记录")
                         
-                        # 显示简要统计  
+                        # 顯示简要统计  
                         if 'virtual_price' in df.columns:
                             latest_vp = df['virtual_price'].iloc[-1] if len(df) > 0 else 0
                             print(f"     Virtual Price: {latest_vp:.6f}")
                             
                     else:
-                        print(f"  ❌ [{pool_name}] 没有获取到数据")
+                        print(f"  ❌ [{pool_name}] 没有獲取到數據")
                         failed += 1
                         results[pool_name] = pd.DataFrame()
                         
                 except Exception as e:
-                    print(f"  ❌ [{pool_name}] 获取失败: {str(e)[:100]}...")
+                    print(f"  ❌ [{pool_name}] 獲取失败: {str(e)[:100]}...")
                     failed += 1
                     results[pool_name] = pd.DataFrame()
             
             # 批次间延迟
             if batch_idx < total_batches - 1:  # 不是最后一批次
-                print(f"  ⏳ 等待 {delay_between_batches} 秒后处理下一批次...")
+                print(f"  ⏳ 等待 {delay_between_batches} 秒后處理下一批次...")
                 time.sleep(delay_between_batches)
         
         print("\n" + "="*60)
-        print(f"📊 批量获取完成!")
+        print(f"📊 批量獲取完成!")
         print(f"   ✅ 成功: {successful}/{len(pools_dict)}")
         print(f"   ❌ 失败: {failed}/{len(pools_dict)}")
         print(f"   成功率: {successful/len(pools_dict)*100:.1f}%")
@@ -1028,82 +1028,82 @@ if __name__ == "__main__":
 
     def get_all_main_pools_data(self, days: int = CURRENT_DAYS_SETTING) -> dict:
         """
-        獲取所有主要池子数据 (优先级 1-3)
+        獲取所有主要池子數據 (優先級 1-3)
         
         Returns:
             {pool_name: DataFrame} 字典
         """
         main_pools = get_all_main_pools()
-        print(f"🎯 获取 {len(main_pools)} 个主要池子数据...")
+        print(f"🎯 獲取 {len(main_pools)} 个主要池子數據...")
         
         return self.get_batch_historical_data(main_pools, days)
 
     def get_high_priority_pools_data(self, days: int = CURRENT_DAYS_SETTING) -> dict:
         """
-        獲取高優先級池子数据 (优先级 1-2)
+        獲取高優先級池子數據 (優先級 1-2)
         
         Returns:
             {pool_name: DataFrame} 字典  
         """
         high_priority_pools = get_high_priority_pools()
-        print(f"⭐ 获取 {len(high_priority_pools)} 个高优先级池子数据...")
+        print(f"⭐ 獲取 {len(high_priority_pools)} 个高優先級池子數據...")
         
         return self.get_batch_historical_data(high_priority_pools, days)
 
     def get_stable_pools_data(self, days: int = CURRENT_DAYS_SETTING) -> dict:
         """
-        获取所有稳定币池数据
+        獲取所有稳定币池數據
         
         Returns:
             {pool_name: DataFrame} 字典
         """
         stable_pools = get_stable_pools()
-        print(f"💰 获取 {len(stable_pools)} 个稳定币池数据...")
+        print(f"💰 獲取 {len(stable_pools)} 个稳定币池數據...")
         
         return self.get_batch_historical_data(stable_pools, days)
 
     def get_all_pools_data(self, days: int = CURRENT_DAYS_SETTING, skip_low_priority: bool = True) -> dict:
         """
-        获取所有池子数据 (可选择跳过低优先级)
+        獲取所有池子數據 (可选择跳过低優先級)
         
         Args:
-            days: 获取天数  
-            skip_low_priority: 是否跳过优先级5的池子
+            days: 獲取天数  
+            skip_low_priority: 是否跳过優先級5的池子
             
         Returns:
             {pool_name: DataFrame} 字典
         """
         if skip_low_priority:
             pools = get_pools_by_priority(min_priority=1, max_priority=4)
-            print(f"🌍 获取所有池子数据 (跳过低优先级): {len(pools)} 个池子")
+            print(f"🌍 獲取所有池子數據 (跳过低優先級): {len(pools)} 个池子")
         else:
             pools = AVAILABLE_POOLS
-            print(f"🌍 获取所有池子数据 (包含全部): {len(pools)} 个池子")
+            print(f"🌍 獲取所有池子數據 (包含全部): {len(pools)} 个池子")
         
         return self.get_batch_historical_data(pools, days, max_concurrent=2, delay_between_batches=3)
 
     def get_pools_by_type_data(self, pool_type: str, days: int = CURRENT_DAYS_SETTING) -> dict:
         """
-        按池子类型获取数据
+        按池子類型獲取數據
         
         Args:
-            pool_type: 池子类型，如 'stable', 'metapool', 'eth_pool', 'btc_pool', 'crypto' 等
-            days: 获取天数
+            pool_type: 池子類型，如 'stable', 'metapool', 'eth_pool', 'btc_pool', 'crypto' 等
+            days: 獲取天数
             
         Returns:
             {pool_name: DataFrame} 字典
         """
         pools = get_pools_by_priority(pool_types=[pool_type])
-        print(f"🏷️  获取 {pool_type} 类型池子数据: {len(pools)} 个池子")
+        print(f"🏷️  獲取 {pool_type} 類型池子數據: {len(pools)} 个池子")
         
         return self.get_batch_historical_data(pools, days)
 
     def export_batch_data_to_excel(self, batch_data: dict, filename: str = None) -> str:
         """
-        将批量数据导出到Excel文件
+        将批量數據导出到Excel文件
         
         Args:
-            batch_data: 来自批量获取函数的数据字典
+            batch_data: 来自批量獲取函数的數據字典
             filename: 输出文件名 (可选)
             
         Returns:
@@ -1143,7 +1143,7 @@ if __name__ == "__main__":
                         sheet_name = pool_name[:31] if len(pool_name) <= 31 else pool_name[:28] + '...'
                         df.to_excel(writer, sheet_name=sheet_name, index=False)
                 
-            print(f"📄 批量数据已导出到: {output_path}")
+            print(f"📄 批量數據已导出到: {output_path}")
             return str(output_path)
             
         except Exception as e:
@@ -1152,10 +1152,10 @@ if __name__ == "__main__":
 
     def analyze_batch_data(self, batch_data: dict) -> pd.DataFrame:
         """
-        分析批量数据，生成统计报告
+        分析批量數據，生成统计报告
         
         Args:
-            batch_data: 来自批量获取函数的数据字典
+            batch_data: 来自批量獲取函数的數據字典
             
         Returns:
             包含统计信息的DataFrame
@@ -1196,28 +1196,28 @@ if __name__ == "__main__":
         
         analysis_df = pd.DataFrame(analysis_results)
         
-        print("\n📈 批量数据分析报告:")
+        print("\n📈 批量數據分析报告:")
         print("="*60)
         print(analysis_df.to_string(index=False))
         
         return analysis_df
 
 def demo_free_historical_data():
-    """演示免费历史数据获取 - 优化版"""
+    """演示免费历史數據獲取 - 优化版"""
     
-    print("🆓 免费历史数据获取演示 - 扩展版")
+    print("🆓 免费历史數據獲取演示 - 扩展版")
     print("=" * 60)
     
     manager = FreeHistoricalDataManager()
     
     print("📋 可用的池子配置:")
     print(f"   总计: {len(AVAILABLE_POOLS)} 个池子")
-    print(f"   高优先级 (1-2): {len(get_high_priority_pools())} 个")
+    print(f"   高優先級 (1-2): {len(get_high_priority_pools())} 个")
     print(f"   主要池子 (1-3): {len(get_all_main_pools())} 个")  
     print(f"   稳定币池: {len(get_stable_pools())} 个")
     print()
     
-    # 展示不同类型的池子
+    # 展示不同類型的池子
     print("🏷️  池子分类:")
     pool_types = set(pool['type'] for pool in AVAILABLE_POOLS.values())
     for pool_type in sorted(pool_types):
@@ -1225,13 +1225,13 @@ def demo_free_historical_data():
         print(f"   {pool_type}: {len(pools_of_type)} 个 ({', '.join(pools_of_type[:3])}...)")
     print()
 
-    # 演示1: 单个池子数据获取 (保持原有演示)
+    # 演示1: 单个池子數據獲取 (保持原有演示)
     print("=" * 60)
-    print("🎯 演示1: 单个池子历史数据获取")
+    print("🎯 演示1: 单个池子历史數據獲取")
     print("=" * 60)
     
     single_pool = TARGET_POOL
-    print(f"获取 {single_pool} 的 {CURRENT_DAYS_SETTING} 天历史数据...")
+    print(f"獲取 {single_pool} 的 {CURRENT_DAYS_SETTING} 天历史數據...")
     
     df_single = manager.get_comprehensive_free_data(
         AVAILABLE_POOLS[single_pool]['address'], 
@@ -1240,27 +1240,27 @@ def demo_free_historical_data():
     )
     
     if not df_single.empty:
-        print(f"✅ 单个池子数据获取成功: {len(df_single)} 条记录")
+        print(f"✅ 单个池子數據獲取成功: {len(df_single)} 条记录")
         print(f"   时间跨度: {(df_single['timestamp'].max() - df_single['timestamp'].min()).days} 天")
         if 'virtual_price' in df_single.columns:
             print(f"   Virtual Price 范围: {df_single['virtual_price'].min():.6f} - {df_single['virtual_price'].max():.6f}")
     else:
-        print("❌ 单个池子数据获取失败")
+        print("❌ 单个池子數據獲取失败")
     
     print()
     
-    # 演示2: 高优先级池子批量获取
+    # 演示2: 高優先級池子批量獲取
     print("=" * 60)
-    print("⭐ 演示2: 高优先级池子批量数据获取")  
+    print("⭐ 演示2: 高優先級池子批量數據獲取")  
     print("=" * 60)
     
     batch_data_high = manager.get_high_priority_pools_data(days=CURRENT_DAYS_SETTING)
     
     if batch_data_high:
-        print(f"\n📊 高优先级批量数据获取结果:")
+        print(f"\n📊 高優先級批量數據獲取结果:")
         total_records = sum(len(df) for df in batch_data_high.values() if not df.empty)
         successful_pools = sum(1 for df in batch_data_high.values() if not df.empty)
-        print(f"   成功获取: {successful_pools}/{len(batch_data_high)} 个池子")
+        print(f"   成功獲取: {successful_pools}/{len(batch_data_high)} 个池子")
         print(f"   总记录数: {total_records}")
         
         # 简要分析
@@ -1268,22 +1268,22 @@ def demo_free_historical_data():
         
     print()
     
-    # 演示3: 按类型获取数据
+    # 演示3: 按類型獲取數據
     print("=" * 60)
-    print("🏷️  演示3: 按类型获取数据 - 稳定币池")
+    print("🏷️  演示3: 按類型獲取數據 - 稳定币池")
     print("=" * 60)
     
     stable_data = manager.get_pools_by_type_data('stable', days=CURRENT_DAYS_SETTING)
     
     if stable_data:
         stable_successful = sum(1 for df in stable_data.values() if not df.empty)
-        print(f"✅ 稳定币池数据获取: {stable_successful}/{len(stable_data)} 个成功")
+        print(f"✅ 稳定币池數據獲取: {stable_successful}/{len(stable_data)} 个成功")
         
     print()
     
     # 演示4: Excel导出
     print("=" * 60)
-    print("📄 演示4: 批量数据导出到Excel")  
+    print("📄 演示4: 批量數據导出到Excel")  
     print("=" * 60)
     
     if batch_data_high:
@@ -1298,47 +1298,47 @@ def demo_free_historical_data():
     
     print("=" * 60)
     print("🎉 演示完成! 主要功能已验证:")
-    print("   ✅ 单个池子数据获取")  
-    print("   ✅ 批量数据获取")
+    print("   ✅ 单个池子數據獲取")  
+    print("   ✅ 批量數據獲取")
     print("   ✅ 按優先級篩選")
     print("   ✅ 按類型篩選")
-    print("   ✅ 数据分析")
+    print("   ✅ 數據分析")
     print("   ✅ Excel导出")
     print("=" * 60)
 
 def demo_batch_collection_scenarios():
-    """演示各种批量获取场景"""
+    """演示各种批量獲取场景"""
     
-    print("\n🚀 批量数据获取场景演示")
+    print("\n🚀 批量數據獲取场景演示")
     print("=" * 60)
     
     manager = FreeHistoricalDataManager()
     
-    # 场景1: 快速获取主要池子数据
-    print("📈 场景1: 主要池子快速数据获取")
+    # 场景1: 快速獲取主要池子數據
+    print("📈 场景1: 主要池子快速數據獲取")
     print("-" * 40)
     main_pools_data = manager.get_all_main_pools_data(days=CURRENT_DAYS_SETTING)
-    print(f"✅ 主要池子数据获取完成: {len([d for d in main_pools_data.values() if not d.empty])}/{len(main_pools_data)} 个成功")
+    print(f"✅ 主要池子數據獲取完成: {len([d for d in main_pools_data.values() if not d.empty])}/{len(main_pools_data)} 个成功")
     print()
     
     # 场景2: ETH相关池子
-    print("🔥 场景2: ETH相关池子数据获取") 
+    print("🔥 场景2: ETH相关池子數據獲取") 
     print("-" * 40)
     eth_pools_data = manager.get_pools_by_type_data('eth_pool', days=CURRENT_DAYS_SETTING)
     if eth_pools_data:
-        print(f"✅ ETH池数据获取完成: {len([d for d in eth_pools_data.values() if not d.empty])}/{len(eth_pools_data)} 个成功")
+        print(f"✅ ETH池數據獲取完成: {len([d for d in eth_pools_data.values() if not d.empty])}/{len(eth_pools_data)} 个成功")
     print()
     
     # 场景3: BTC相关池子
-    print("₿ 场景3: BTC相关池子数据获取")
+    print("₿ 场景3: BTC相关池子數據獲取")
     print("-" * 40) 
     btc_pools_data = manager.get_pools_by_type_data('btc_pool', days=CURRENT_DAYS_SETTING)
     if btc_pools_data:
-        print(f"✅ BTC池数据获取完成: {len([d for d in btc_pools_data.values() if not d.empty])}/{len(btc_pools_data)} 个成功")
+        print(f"✅ BTC池數據獲取完成: {len([d for d in btc_pools_data.values() if not d.empty])}/{len(btc_pools_data)} 个成功")
     print()
     
     # 场景4: 综合比较分析
-    print("📊 场景4: 综合数据比较分析")
+    print("📊 场景4: 综合數據比较分析")
     print("-" * 40)
     
     all_batch_data = {}
@@ -1351,34 +1351,34 @@ def demo_batch_collection_scenarios():
     if all_batch_data:
         analysis = manager.analyze_batch_data(all_batch_data)
         
-        # 导出综合数据
+        # 导出综合數據
         excel_path = manager.export_batch_data_to_excel(
             all_batch_data,
             f"curve_comprehensive_pools_{CURRENT_DAYS_SETTING}d.xlsx"
         )
-        print(f"✅ 综合数据已导出: {excel_path}")
+        print(f"✅ 综合數據已导出: {excel_path}")
     
     print("\n" + "=" * 60)
-    print("🎯 批量获取场景演示完成!")
-    print("   可以根据需要使用不同的获取策略")
+    print("🎯 批量獲取场景演示完成!")
+    print("   可以根据需要使用不同的獲取策略")
     print("=" * 60)
 
 def show_available_pools_info():
-    """显示所有可用池子的详细信息"""
+    """顯示所有可用池子的详细信息"""
     
     print("\n📋 可用Curve池子详细信息")
     print("=" * 80)
     
-    # 按优先级分组显示
+    # 按優先級分组顯示
     for priority in range(1, 6):
         pools_at_priority = {name: info for name, info in AVAILABLE_POOLS.items() 
                            if info['priority'] == priority}
         
         if pools_at_priority:
-            priority_labels = {1: "🏆 最高優先級", 2: "⭐ 高优先级", 3: "📈 中优先级", 
-                             4: "📊 低优先级", 5: "🔽 最低優先級"}
+            priority_labels = {1: "🏆 最高優先級", 2: "⭐ 高優先級", 3: "📈 中優先級", 
+                             4: "📊 低優先級", 5: "🔽 最低優先級"}
             
-            print(f"\n{priority_labels.get(priority, f'优先级 {priority}')} ({len(pools_at_priority)} 个池子):")
+            print(f"\n{priority_labels.get(priority, f'優先級 {priority}')} ({len(pools_at_priority)} 个池子):")
             print("-" * 60)
             
             for pool_name, pool_info in sorted(pools_at_priority.items()):
@@ -1387,21 +1387,21 @@ def show_available_pools_info():
     print(f"\n📊 统计信息:")
     print(f"   总池子数量: {len(AVAILABLE_POOLS)}")
     
-    # 按类型统计
+    # 按類型统计
     type_counts = {}
     for pool_info in AVAILABLE_POOLS.values():
         pool_type = pool_info['type']
         type_counts[pool_type] = type_counts.get(pool_type, 0) + 1
     
-    print(f"   类型分布:")
+    print(f"   類型分布:")
     for pool_type, count in sorted(type_counts.items()):
         print(f"     {pool_type}: {count} 个")
     
     print("\n🎯 推荐使用策略:")
-    print("   • 快速测试: get_high_priority_pools_data() - 获取优先级1-2的池子")  
-    print("   • 日常分析: get_all_main_pools_data() - 获取优先级1-3的池子")
-    print("   • 全面分析: get_all_pools_data() - 获取所有池子数据")
-    print("   • 分类分析: get_pools_by_type_data('stable') - 按类型获取")
+    print("   • 快速測試: get_high_priority_pools_data() - 獲取優先級1-2的池子")  
+    print("   • 日常分析: get_all_main_pools_data() - 獲取優先級1-3的池子")
+    print("   • 全面分析: get_all_pools_data() - 獲取所有池子數據")
+    print("   • 分类分析: get_pools_by_type_data('stable') - 按類型獲取")
     print("=" * 80)
 
 def switch_days_config(days_setting: str):
@@ -1431,7 +1431,7 @@ def demo_all_configurations():
     print("=" * 40)
     
     configs = [
-        ('quick', '快速测试'),
+        ('quick', '快速測試'),
         ('medium', '中期分析'), 
         ('full', '完整年度')
     ]
@@ -1441,7 +1441,7 @@ def demo_all_configurations():
         switch_days_config(config)
         
         manager = FreeHistoricalDataManager()
-        print(f"📊 将获取 {CURRENT_DAYS_SETTING} 天数据")
+        print(f"📊 将獲取 {CURRENT_DAYS_SETTING} 天數據")
 
 if __name__ == "__main__":
     import sys
@@ -1461,17 +1461,17 @@ if __name__ == "__main__":
             demo_free_historical_data()  
             demo_batch_collection_scenarios()
         elif mode == "full":
-            # 🚀 直接获取所有池子的一年历史数据
-            print("🚀 开始获取所有37个Curve池子的一年历史数据...")
+            # 🚀 直接獲取所有池子的一年历史數據
+            print("🚀 開始獲取所有37个Curve池子的一年历史數據...")
             print("⚠️  注意: 这将需要较长时间 (预计10-20分钟)")
             print("=" * 60)
             
             manager = FreeHistoricalDataManager()
             
-            # 显示将要获取的池子信息
-            all_pools = get_pools_by_priority(min_priority=1, max_priority=4)  # 跳过优先级5
-            print(f"📋 将获取 {len(all_pools)} 个池子的 {CURRENT_DAYS_SETTING} 天数据")
-            print(f"🏷️  池子类型分布:")
+            # 顯示将要獲取的池子信息
+            all_pools = get_pools_by_priority(min_priority=1, max_priority=4)  # 跳过優先級5
+            print(f"📋 将獲取 {len(all_pools)} 个池子的 {CURRENT_DAYS_SETTING} 天數據")
+            print(f"🏷️  池子類型分布:")
             
             type_counts = {}
             for pool_info in all_pools.values():
@@ -1482,27 +1482,27 @@ if __name__ == "__main__":
                 print(f"   {pool_type}: {count} 个")
                 
             # 询问用户确认
-            response = input("\n继续获取所有池子数据? (y/N): ")
+            response = input("\n继续獲取所有池子數據? (y/N): ")
             if response.lower() in ['y', 'yes', '是']:
                 
-                print("\n🔄 开始批量数据获取...")
+                print("\n🔄 開始批量數據獲取...")
                 batch_data = manager.get_all_pools_data(days=CURRENT_DAYS_SETTING, skip_low_priority=True)
                 
                 # 统计结果
                 successful = sum(1 for df in batch_data.values() if not df.empty)
                 total_records = sum(len(df) for df in batch_data.values() if not df.empty)
                 
-                print(f"\n🎉 批量获取完成!")
+                print(f"\n🎉 批量獲取完成!")
                 print(f"   ✅ 成功: {successful}/{len(batch_data)} 个池子")
                 print(f"   📊 总记录数: {total_records}")
                 
                 if successful > 0:
                     # 生成分析报告
-                    print(f"\n📈 生成数据分析报告...")
+                    print(f"\n📈 生成數據分析报告...")
                     analysis = manager.analyze_batch_data(batch_data)
                     
                     # 导出Excel
-                    print(f"\n📄 导出数据到Excel...")
+                    print(f"\n📄 导出數據到Excel...")
                     from datetime import datetime
                     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
                     excel_path = manager.export_batch_data_to_excel(
@@ -1511,49 +1511,49 @@ if __name__ == "__main__":
                     )
                     
                     if excel_path:
-                        print(f"✅ 完整数据已保存: {excel_path}")
+                        print(f"✅ 完整數據已保存: {excel_path}")
                         print(f"📁 缓存目录: {manager.cache_dir.absolute()}")
                         
-                        print(f"\n💡 使用数据:")
+                        print(f"\n💡 使用數據:")
                         print(f"from free_historical_data import FreeHistoricalDataManager")
                         print(f"manager = FreeHistoricalDataManager()")
-                        print(f"# 数据已缓存，下次加载会更快")
+                        print(f"# 數據已缓存，下次加载会更快")
                         
                 else:
-                    print("❌ 没有成功获取到任何数据，请检查网络连接")
+                    print("❌ 没有成功獲取到任何數據，请檢查网络连接")
                     
             else:
                 print("❌ 用户取消操作")
                 
         elif mode == "quick-all":
-            # 🔥 快速获取所有池子的7天数据 (用于测试)
-            print("⚡ 快速获取所有池子的7天数据 (测试模式)...")
+            # 🔥 快速獲取所有池子的7天數據 (用于測試)
+            print("⚡ 快速獲取所有池子的7天數據 (測試模式)...")
             print("=" * 60)
             
             manager = FreeHistoricalDataManager()
             
-            # 获取7天数据进行快速测试
+            # 獲取7天數據进行快速測試
             batch_data = manager.get_all_pools_data(days=7, skip_low_priority=True)
             
             successful = sum(1 for df in batch_data.values() if not df.empty)
-            print(f"\n✅ 快速测试完成: {successful}/{len(batch_data)} 个池子成功")
+            print(f"\n✅ 快速測試完成: {successful}/{len(batch_data)} 个池子成功")
             
             if successful > 0:
                 excel_path = manager.export_batch_data_to_excel(
                     batch_data,
                     "curve_all_pools_7d_test.xlsx"
                 )
-                print(f"📄 测试数据已导出: {excel_path}")
+                print(f"📄 測試數據已导出: {excel_path}")
                 
         else:
             print("Usage: python free_historical_data.py [选项]")
             print("可用选项:")
-            print("  info      - 显示所有可用池子信息")
-            print("  batch     - 演示批量数据获取")  
-            print("  single    - 演示单个池子获取")
-            print("  all       - 运行所有演示")
-            print("  full      - 🚀 获取所有池子的一年历史数据")
-            print("  quick-all - ⚡ 快速获取所有池子的7天数据 (测试)")
+            print("  info      - 顯示所有可用池子信息")
+            print("  batch     - 演示批量數據獲取")  
+            print("  single    - 演示单个池子獲取")
+            print("  all       - 運行所有演示")
+            print("  full      - 🚀 獲取所有池子的一年历史數據")
+            print("  quick-all - ⚡ 快速獲取所有池子的7天數據 (測試)")
     else:
-        # 默认运行单个池子演示
+        # 預設運行单个池子演示
         demo_free_historical_data() 
